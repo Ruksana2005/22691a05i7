@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>URL Shortener</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #e0f7fa; /* Light blue background */
+    }
+    h2 { text-align: center; }
+    form {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    table {
+      width: 80%;
+      margin: 2rem auto;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    p { text-align: center; }
+  </style>
+</head>
+<body>
+  <h2>URL Shortener</h2>
+  <form id="urlForm">
+    <input type="url" id="longUrl" placeholder="Enter Long URL" required />
+    <input type="number" id="validity" placeholder="Validity (in minutes)" />
+    <input type="text" id="customCode" placeholder="Custom Short Code (optional)" />
+    <button type="submit">Shorten</button>
+  </form>
+
+  <table id="outputTable" style="display:none;">
+    <thead>
+      <tr><th>Short URL</th><th>Original URL</th><th>Clicks</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const records = [];
+    const form = document.getElementById('urlForm');
+    const table = document.getElementById('outputTable');
+    const tbody = table.querySelector('tbody');
+
+    form.onsubmit = function(e) {
+      e.preventDefault();
+      const url = document.getElementById('longUrl').value;
+      const validity = document.getElementById('validity').value || 30;
+      const code = document.getElementById('customCode').value || Math.random().toString(36).substr(2, 6);
+
+      const record = {
+        id: code,
+        longUrl: url,
+        expiry: Date.now() + validity * 60000,
+        clicks: 0
+      };
+      records.push(record);
+      updateTable();
+      form.reset();
+    };
+
+    function updateTable() {
+      tbody.innerHTML = '';
+      records.forEach(r => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>
+            <a href="#" onclick="handleClick('${r.id}')">${location.origin}/${r.id}</a>
+          </td>
+          <td>${r.longUrl}</td>
+          <td id="clicks-${r.id}">${r.clicks}</td>
+        `;
+        tbody.appendChild(row);
+      });
+      table.style.display = '';
+    }
+
+    function handleClick(id) {
+      const record = records.find(r => r.id === id);
+      if (!record) {
+        alert("Short URL not found.");
+        return;
+      }
+
+      if (Date.now() > record.expiry) {
+        alert("This link has expired.");
+        return;
+      }
+
+     
+      record.clicks++;
+      document.getElementById(`clicks-${id}`).innerText = record.clicks;
+
+      window.open(record.longUrl, '_blank');
+    }
+  </script>
+</body>
+</html>
